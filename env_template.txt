@@ -1,0 +1,73 @@
+# Environment Variables Template
+# Copy this file to .env and fill in your actual values
+
+# Django Settings
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database (Production)
+DATABASE_URL=postgresql://user:password@localhost:5432/ecomarce_choco
+
+# UAE Settings
+TIME_ZONE=Asia/Dubai
+VAT_RATE=0.05
+
+# Email Settings
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+
+# Payment Gateways
+
+# Tabby
+TABBY_API_KEY=your-tabby-api-key
+TABBY_PUBLIC_KEY=your-tabby-public-key
+TABBY_MERCHANT_CODE=your-merchant-code
+TABBY_WEBHOOK_SECRET=your-webhook-secret
+TABBY_TEST_MODE=True
+
+# Tamara
+TAMARA_API_TOKEN=your-tamara-api-token
+TAMARA_MERCHANT_URL=your-merchant-url
+TAMARA_NOTIFICATION_TOKEN=your-notification-token
+TAMARA_TEST_MODE=True
+
+# Ziina (UAE Central Bank Licensed)
+ZIINA_API_KEY=your-ziina-api-key
+ZIINA_MERCHANT_ID=your-ziina-merchant-id
+ZIINA_PUBLIC_KEY=your-ziina-public-key
+ZIINA_WEBHOOK_SECRET=your-ziina-webhook-secret
+ZIINA_TEST_MODE=True
+
+# AWS S3 (Optional - for media storage)
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+AWS_STORAGE_BUCKET_NAME=your-bucket-name
+AWS_S3_REGION_NAME=eu-west-1
+
+# Redis (for caching and celery)
+REDIS_URL=redis://localhost:6379/0
+
+# Celery
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+
+# Sentry (Error Tracking)
+SENTRY_DSN=your-sentry-dsn
+
+# CORS Settings
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+
+# GraphQL
+GRAPHQL_JWT_SECRET_KEY=your-jwt-secret-key
+GRAPHQL_JWT_EXPIRATION_DELTA=7 days
+
+# Site Settings
+SITE_NAME=Chocolate Shop UAE
+SITE_URL=https://yoursite.com
+ADMIN_EMAIL=admin@yoursite.com
+

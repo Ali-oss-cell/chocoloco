@@ -146,7 +146,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query {\n  products(limit: 10) {\n    id\n    name\n    sku\n    slug\n    description\n    isActive\n    featured\n    brand {\n      id\n      name\n      slug\n    }\n    category {\n      id\n      name\n      slug\n    }\n    prices {\n      basePrice\n      salePrice\n      priceType\n    }\n    inventory {\n      quantityInStock\n      isInStock\n      lowStockThreshold\n    }\n    images {\n      id\n      image\n      altText\n      isPrimary\n      displayOrder\n    }\n    usecaseImages {\n      id\n      image\n      altText\n      displayOrder\n    }\n  }\n}"
+								"query": "query {\n  products(limit: 10) {\n    id\n    name\n    sku\n    slug\n    description\n    isActive\n    featured\n    brand {\n      id\n      name\n      slug\n    }\n    category {\n      id\n      name\n      slug\n    }\n    prices {\n      basePrice\n      salePrice\n      priceType\n    }\n    inventory {\n      quantityInStock\n      isInStock\n      lowStockThreshold\n    }\n    images {\n      id\n      image\n      altText\n      isPrimary\n      displayOrder\n    }\n    usecaseImages {\n      id\n      image\n      displayOrder\n    }\n  }\n}"
 							}
 						},
 						"url": {
@@ -171,7 +171,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query {\n  product(id: 1) {\n    id\n    name\n    sku\n    slug\n    description\n    shortDescription\n    ingredients\n    allergenInfo\n    weight\n    volume\n    unitType\n    brand {\n      id\n      name\n      countryOfOrigin\n    }\n    category {\n      id\n      name\n      description\n    }\n    prices {\n      id\n      basePrice\n      salePrice\n      priceType\n      minQuantity\n      isActive\n    }\n    inventory {\n      id\n      quantityInStock\n      lowStockThreshold\n      warehouseLocation\n      isInStock\n    }\n    images {\n      id\n      image\n      altText\n      isPrimary\n      displayOrder\n    }\n    usecaseImages {\n      id\n      image\n      altText\n      displayOrder\n    }\n    variants {\n      id\n      sku\n      price\n      salePrice\n      effectivePrice\n      quantityInStock\n      isInStock\n      isActive\n      isDefault\n      optionValues {\n        id\n        value\n        displayOrder\n        option {\n          id\n          name\n        }\n      }\n    }\n  }\n}"
+								"query": "query {\n  product(id: 1) {\n    id\n    name\n    sku\n    slug\n    description\n    shortDescription\n    ingredients\n    allergenInfo\n    weight\n    volume\n    unitType\n    brand {\n      id\n      name\n      countryOfOrigin\n    }\n    category {\n      id\n      name\n      description\n    }\n    prices {\n      id\n      basePrice\n      salePrice\n      priceType\n      minQuantity\n      isActive\n    }\n    inventory {\n      id\n      quantityInStock\n      lowStockThreshold\n      warehouseLocation\n      isInStock\n    }\n    images {\n      id\n      image\n      altText\n      isPrimary\n      displayOrder\n    }\n    usecaseImages {\n      id\n      image\n      displayOrder\n    }\n    variants {\n      id\n      sku\n      price\n      salePrice\n      effectivePrice\n      quantityInStock\n      isInStock\n      isActive\n      isDefault\n      optionValues {\n        id\n        value\n        displayOrder\n        option {\n          id\n          name\n        }\n      }\n    }\n  }\n}"
 							}
 						},
 						"url": {
@@ -347,7 +347,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query {\n  cart(sessionId: \"{{session_id}}\") {\n    id\n    sessionId\n    createdAt\n    updatedAt\n    totalAmount\n    itemCount\n    items {\n      id\n      quantity\n      unitPrice\n      subtotal\n      variant {\n        id\n        name\n        sku\n      }\n      product {\n        id\n        name\n        sku\n        images {\n          image\n          isPrimary\n        }\n      }\n    }\n  }\n}"
+								"query": "query {\n  cart(sessionKey: \"{{session_id}}\") {\n    id\n    sessionKey\n    createdAt\n    updatedAt\n    subtotal\n    taxAmount\n    total\n    itemCount\n    items {\n      id\n      quantity\n      priceAtAddition\n      subtotal\n      productName\n      displayName\n      variantOptionsDisplay\n      variant {\n        id\n        sku\n      }\n      product {\n        id\n        name\n        sku\n        images {\n          image\n          isPrimary\n        }\n      }\n    }\n  }\n}"
 							}
 						},
 						"url": {
@@ -546,13 +546,41 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  createProduct(input: {\n    sku: \"CHOC-001\",\n    name: \"Dark Chocolate Bar 85%\",\n    slug: \"dark-chocolate-bar-85\",\n    brandId: 1,\n    categoryId: 1,\n    description: \"Rich dark chocolate with 85% cocoa\",\n    shortDescription: \"Premium dark chocolate\",\n    ingredients: \"Cocoa mass, cocoa butter, sugar\",\n    allergenInfo: \"May contain traces of nuts\",\n    weight: \"100.0\",\n    unitType: \"GRAMS\",\n    isActive: true,\n    featured: true\n  }) {\n    success\n    message\n    product {\n      id\n      name\n      sku\n      brand {\n        name\n      }\n      category {\n        name\n      }\n    }\n  }\n}"
+								"query": "mutation {\n  createProduct(input: {\n    sku: \"CHOC-001\",\n    name: \"Dark Chocolate Bar 85%\",\n    slug: \"dark-chocolate-bar-85\",\n    brandId: 1,\n    categoryId: 1,\n    description: \"Rich dark chocolate with 85% cocoa\",\n    shortDescription: \"Premium dark chocolate\",\n    ingredients: \"Cocoa mass, cocoa butter, sugar\",\n    allergenInfo: \"May contain traces of nuts\",\n    weight: \"100.0\",\n    unitType: \"GRAM\",\n    isActive: true,\n    featured: true\n  }) {\n    success\n    message\n    product {\n      id\n      name\n      sku\n      brand {\n        name\n      }\n      category {\n        name\n      }\n    }\n  }\n}"
 							}
 						},
 						"url": {
 							"raw": "{{base_url}}",
 							"host": ["{{base_url}}"]
 						}
+					}
+				},
+				{
+					"name": "Fix All Products unitType (GRAMS → GRAM)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "JWT {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  products(limit: 100) {\n    id\n    name\n    sku\n    unitType\n  }\n}\n\n# Then for each product with unitType=\"GRAMS\", run:\n# mutation {\n#   updateProduct(id: <ID>, input: { unitType: \"GRAM\" }) {\n#     success\n#     product { id name unitType }\n#   }\n# }"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						},
+						"description": "First, query to find products with unitType='GRAMS'. Then update each one individually. For faster bulk fix, use: python manage.py fix_unit_type on the server."
 					}
 				},
 				{
@@ -568,13 +596,14 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  updateProduct(id: 1, input: {\n    name: \"Dark Chocolate Bar 85% - Premium\"\n    description: \"Updated description\"\n    featured: false\n    brandId: 1\n    categoryId: 1\n  }) {\n    success\n    message\n    product {\n      id\n      name\n      featured\n    }\n  }\n}"
+								"query": "mutation {\n  updateProduct(id: 1, input: {\n    name: \"Dark Chocolate Bar 85% - Premium\"\n    description: \"Updated description\"\n    featured: false\n    brandId: 1\n    categoryId: 1\n    unitType: \"GRAM\"\n  }) {\n    success\n    message\n    product {\n      id\n      name\n      featured\n      unitType\n    }\n  }\n}"
 							}
 						},
 						"url": {
 							"raw": "{{base_url}}",
 							"host": ["{{base_url}}"]
-						}
+						},
+						"description": "Note: To fix products with unitType 'GRAMS' (plural), update them to 'GRAM' (singular). Valid unitType values: 'KG', 'GRAM', 'LITER', 'BOTTLE', 'PIECE', 'BOX', 'PACK'"
 					}
 				},
 				{
@@ -674,19 +703,23 @@
 					"name": "Upload Product Image",
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation ($file: Upload!) {\n  uploadProductImage(input: {\n    productId: 1\n    image: $file\n    altText: \"Dark Chocolate Bar\"\n    useCase: PRIMARY\n  }) {\n    success\n    message\n    productImage {\n      id\n      image\n      altText\n      useCase\n      isPrimary\n    }\n  }\n}",
-								"variables": "{\n  \"file\": null\n}"
+								"query": "mutation {\n  uploadProductImage(input: {\n    productId: 1\n    image: \"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=\"\n    altText: \"Dark Chocolate Bar\"\n    isPrimary: true\n    displayOrder: 1\n  }) {\n    success\n    message\n    productImage {\n      id\n      image\n      altText\n      isPrimary\n      displayOrder\n    }\n  }\n}"
 							}
 						},
 						"url": {
 							"raw": "{{base_url}}",
 							"host": ["{{base_url}}"]
 						},
-						"description": "Note: File upload requires multipart/form-data. Use Postman's GraphQL file upload feature."
+						"description": "Note: Images are uploaded as base64 encoded strings. Replace the example base64 string with your actual image data in the format: data:image/jpeg;base64,<base64-string>"
 					}
 				},
 				{
@@ -789,7 +822,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  updateCartItem(cartItemId: 1, quantity: 5) {\n    success\n    message\n    cartItem {\n      id\n      quantity\n      unitPrice\n      subtotal\n    }\n    cart {\n      id\n      totalAmount\n      itemCount\n    }\n  }\n}"
+								"query": "mutation {\n  updateCartItem(cartItemId: 1, quantity: 5) {\n    success\n    message\n    cartItem {\n      id\n      quantity\n      priceAtAddition\n      subtotal\n      productName\n      displayName\n      product {\n        id\n        name\n      }\n    }\n    cart {\n      id\n      subtotal\n      taxAmount\n      total\n      itemCount\n      sessionKey\n    }\n  }\n}"
 							}
 						},
 						"url": {
@@ -819,7 +852,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  removeFromCart(cartItemId: 1) {\n    success\n    message\n    cart {\n      id\n      totalAmount\n      itemCount\n    }\n  }\n}"
+								"query": "mutation {\n  removeFromCart(cartItemId: 1) {\n    success\n    message\n    cart {\n      id\n      subtotal\n      taxAmount\n      total\n      itemCount\n      sessionKey\n    }\n  }\n}"
 							}
 						},
 						"url": {
@@ -849,7 +882,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  clearCart(sessionId: \"{{session_id}}\") {\n    success\n    message\n  }\n}"
+								"query": "mutation {\n  clearCart(sessionKey: \"{{session_id}}\") {\n    success\n    message\n  }\n}"
 							}
 						},
 						"url": {
@@ -884,7 +917,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  createRetailOrder(input: {\n    cartId: 1\n    customerName: \"John Doe\"\n    customerEmail: \"john@example.com\"\n    customerPhone: \"+971501234567\"\n    shippingAddress: {\n      fullName: \"John Doe\"\n      phone: \"+971501234567\"\n      streetAddress: \"123 Main Street\"\n      city: \"Dubai\"\n      emirate: \"Dubai\"\n      postalCode: \"12345\"\n      country: \"UAE\"\n    }\n    paymentMethod: COD\n    notes: \"Please handle with care\"\n  }) {\n    success\n    message\n    order {\n      id\n      orderNumber\n      status\n      totalAmount\n      customerName\n      customerEmail\n    }\n  }\n}"
+								"query": "mutation {\n  createRetailOrder(\n    sessionKey: \"{{session_id}}\"\n    customerInfo: {\n      name: \"John Doe\"\n      email: \"john@example.com\"\n      phone: \"+971501234567\"\n      company: \"\"\n    }\n    shippingAddress: {\n      fullName: \"John Doe\"\n      phoneNumber: \"+971501234567\"\n      email: \"john@example.com\"\n      addressLine1: \"123 Main Street\"\n      addressLine2: \"Apartment 4B\"\n      city: \"Dubai\"\n      emirate: \"DUBAI\"\n      area: \"Downtown\"\n      postalCode: \"12345\"\n      deliveryInstructions: \"Please handle with care\"\n    }\n  ) {\n    success\n    message\n    order {\n      id\n      orderNumber\n      status\n      orderType\n      subtotal\n      taxAmount\n      deliveryFee\n      totalAmount\n      customerName\n      customerEmail\n      customerPhone\n      shippingAddress {\n        fullName\n        phoneNumber\n        city\n        emirate\n        addressLine1\n      }\n      items {\n        id\n        productName\n        productSku\n        quantity\n        unitPrice\n        totalPrice\n      }\n    }\n  }\n}"
 							}
 						},
 						"url": {

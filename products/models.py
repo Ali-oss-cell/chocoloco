@@ -65,6 +65,7 @@ class Product(models.Model):
     UNIT_TYPE_CHOICES = [
         ('KG', 'Kilogram'),
         ('GRAM', 'Gram'),
+        ('LITER', 'Liter'),
         ('BOTTLE', 'Bottle'),
         ('PIECE', 'Piece'),
         ('BOX', 'Box'),

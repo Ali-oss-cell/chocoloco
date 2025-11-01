@@ -1,0 +1,333 @@
+{
+	"info": {
+		"_postman_id": "product-setup-collection",
+		"name": "Product Setup - Categories, Brands & Products",
+		"description": "Complete product setup collection: Create 5 Categories, 5 Brands, and 20 Products with prices and inventory\n\nUse these requests in order after authenticating.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://164.90.215.173/graphql/",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🔐 STEP 0: Authenticate (Required First!)",
+			"item": [
+				{
+					"name": "Login - Get JWT Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.tokenAuth && response.data.tokenAuth.token) {",
+									"        pm.collectionVariables.set('jwt_token', response.data.tokenAuth.token);",
+									"        console.log('✅ Token saved:', response.data.tokenAuth.token);",
+									"        console.log('User:', response.data.tokenAuth.user);",
+									"    } else {",
+									"        console.log('❌ No token in response:', response);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  tokenAuth(username: \"choco\", password: \"311225ali\") {\n    token\n    payload\n    user {\n      id\n      username\n      email\n      isStaff\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📦 STEP 1: Create Categories (5)",
+			"item": [
+				{
+					"name": "Create All 5 Categories",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  cat1: createCategory(input: {\n    name: \"Dark Chocolate\"\n    slug: \"dark-chocolate\"\n    description: \"Premium dark chocolate selection\"\n    isActive: true\n    displayOrder: 1\n  }) {\n    success\n    category { id name }\n  }\n  \n  cat2: createCategory(input: {\n    name: \"Milk Chocolate\"\n    slug: \"milk-chocolate\"\n    description: \"Smooth and creamy milk chocolate\"\n    isActive: true\n    displayOrder: 2\n  }) {\n    success\n    category { id name }\n  }\n  \n  cat3: createCategory(input: {\n    name: \"White Chocolate\"\n    slug: \"white-chocolate\"\n    description: \"Delicate white chocolate varieties\"\n    isActive: true\n    displayOrder: 3\n  }) {\n    success\n    category { id name }\n  }\n  \n  cat4: createCategory(input: {\n    name: \"Chocolate Bars\"\n    slug: \"chocolate-bars\"\n    description: \"Classic chocolate bars\"\n    isActive: true\n    displayOrder: 4\n  }) {\n    success\n    category { id name }\n  }\n  \n  cat5: createCategory(input: {\n    name: \"Chocolate Gifts\"\n    slug: \"chocolate-gifts\"\n    description: \"Premium gift boxes and assortments\"\n    isActive: true\n    displayOrder: 5\n  }) {\n    success\n    category { id name }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🏭 STEP 2: Create Brands (5)",
+			"item": [
+				{
+					"name": "Create All 5 Brands",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  brand1: createBrand(input: {\n    name: \"Lindt\"\n    slug: \"lindt\"\n    description: \"Swiss chocolate excellence since 1845\"\n    countryOfOrigin: \"Switzerland\"\n    isActive: true\n    displayOrder: 1\n  }) {\n    success\n    brand { id name }\n  }\n  \n  brand2: createBrand(input: {\n    name: \"Godiva\"\n    slug: \"godiva\"\n    description: \"Belgian chocolate artisans since 1926\"\n    countryOfOrigin: \"Belgium\"\n    isActive: true\n    displayOrder: 2\n  }) {\n    success\n    brand { id name }\n  }\n  \n  brand3: createBrand(input: {\n    name: \"Ferrero Rocher\"\n    slug: \"ferrero-rocher\"\n    description: \"Italian luxury chocolate\"\n    countryOfOrigin: \"Italy\"\n    isActive: true\n    displayOrder: 3\n  }) {\n    success\n    brand { id name }\n  }\n  \n  brand4: createBrand(input: {\n    name: \"Toblerone\"\n    slug: \"toblerone\"\n    description: \"Iconic Swiss chocolate with honey and almond\"\n    countryOfOrigin: \"Switzerland\"\n    isActive: true\n    displayOrder: 4\n  }) {\n    success\n    brand { id name }\n  }\n  \n  brand5: createBrand(input: {\n    name: \"Cadbury\"\n    slug: \"cadbury\"\n    description: \"British chocolate tradition\"\n    countryOfOrigin: \"United Kingdom\"\n    isActive: true\n    displayOrder: 5\n  }) {\n    success\n    brand { id name }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🍫 STEP 3: Create Products (20)",
+			"item": [
+				{
+					"name": "Batch 1: Products 1-5 (Lindt Dark)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  p1: createProduct(input: {\n    sku: \"LINDT-DARK-85\"\n    name: \"Lindt Excellence Dark 85%\"\n    slug: \"lindt-excellence-dark-85\"\n    brandId: 1\n    categoryId: 1\n    description: \"Intense dark chocolate with 85% cocoa content\"\n    shortDescription: \"Premium dark chocolate bar\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p2: createProduct(input: {\n    sku: \"LINDT-DARK-70\"\n    name: \"Lindt Excellence Dark 70%\"\n    slug: \"lindt-excellence-dark-70\"\n    brandId: 1\n    categoryId: 1\n    description: \"Smooth dark chocolate with 70% cocoa\"\n    shortDescription: \"Rich dark chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p3: createProduct(input: {\n    sku: \"LINDT-SEA-SALT\"\n    name: \"Lindt Dark Sea Salt\"\n    slug: \"lindt-dark-sea-salt\"\n    brandId: 1\n    categoryId: 1\n    description: \"Dark chocolate with a touch of sea salt\"\n    shortDescription: \"Salted dark chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n  }) { success product { id name } }\n  \n  p4: createProduct(input: {\n    sku: \"LINDT-ORANGE\"\n    name: \"Lindt Dark Orange Intense\"\n    slug: \"lindt-dark-orange\"\n    brandId: 1\n    categoryId: 1\n    description: \"Dark chocolate with natural orange flavor\"\n    shortDescription: \"Orange dark chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n  }) { success product { id name } }\n  \n  p5: createProduct(input: {\n    sku: \"LINDT-MINT\"\n    name: \"Lindt Dark Mint Intense\"\n    slug: \"lindt-dark-mint\"\n    brandId: 1\n    categoryId: 1\n    description: \"Dark chocolate with refreshing mint\"\n    shortDescription: \"Mint dark chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n  }) { success product { id name } }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Batch 2: Products 6-10 (Lindt Milk & White)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  p6: createProduct(input: {\n    sku: \"LINDT-MILK-001\"\n    name: \"Lindt Milk Chocolate Classic\"\n    slug: \"lindt-milk-classic\"\n    brandId: 1\n    categoryId: 2\n    description: \"Smooth and creamy milk chocolate\"\n    shortDescription: \"Classic milk chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p7: createProduct(input: {\n    sku: \"LINDT-MILK-HAZEL\"\n    name: \"Lindt Milk Chocolate with Hazelnuts\"\n    slug: \"lindt-milk-hazelnut\"\n    brandId: 1\n    categoryId: 2\n    description: \"Creamy milk chocolate with whole hazelnuts\"\n    shortDescription: \"Milk chocolate with hazelnuts\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n  }) { success product { id name } }\n  \n  p8: createProduct(input: {\n    sku: \"LINDT-WHITE-001\"\n    name: \"Lindt White Chocolate\"\n    slug: \"lindt-white-chocolate\"\n    brandId: 1\n    categoryId: 3\n    description: \"Delicate white chocolate\"\n    shortDescription: \"Smooth white chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n  }) { success product { id name } }\n  \n  p9: createProduct(input: {\n    sku: \"LINDT-LINDOR-MILK\"\n    name: \"Lindt Lindor Milk Chocolate Truffles\"\n    slug: \"lindt-lindor-milk\"\n    brandId: 1\n    categoryId: 2\n    description: \"Irresistibly smooth melting truffles\"\n    shortDescription: \"Melting milk chocolate truffles\"\n    weight: \"200.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p10: createProduct(input: {\n    sku: \"LINDT-LINDOR-DARK\"\n    name: \"Lindt Lindor Dark Chocolate Truffles\"\n    slug: \"lindt-lindor-dark\"\n    brandId: 1\n    categoryId: 1\n    description: \"Dark chocolate truffles with smooth filling\"\n    shortDescription: \"Melting dark chocolate truffles\"\n    weight: \"200.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n  }) { success product { id name } }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Batch 3: Products 11-15 (Other Brands)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  p11: createProduct(input: {\n    sku: \"GODIVA-DARK-001\"\n    name: \"Godiva Dark Chocolate Bar 72%\"\n    slug: \"godiva-dark-72\"\n    brandId: 2\n    categoryId: 1\n    description: \"Belgian dark chocolate masterpiece\"\n    shortDescription: \"Premium Belgian dark chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p12: createProduct(input: {\n    sku: \"FERRERO-BOX-16\"\n    name: \"Ferrero Rocher Collection 16 pieces\"\n    slug: \"ferrero-rocher-16\"\n    brandId: 3\n    categoryId: 5\n    description: \"Luxury hazelnut chocolates in gold foil\"\n    shortDescription: \"Premium hazelnut chocolates\"\n    weight: \"200.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p13: createProduct(input: {\n    sku: \"TOBLERONE-MILK-100\"\n    name: \"Toblerone Milk Chocolate\"\n    slug: \"toblerone-milk-100\"\n    brandId: 4\n    categoryId: 4\n    description: \"Swiss milk chocolate with honey and almond nougat\"\n    shortDescription: \"Swiss chocolate triangle\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n  }) { success product { id name } }\n  \n  p14: createProduct(input: {\n    sku: \"TOBLERONE-DARK-100\"\n    name: \"Toblerone Dark Chocolate\"\n    slug: \"toblerone-dark-100\"\n    brandId: 4\n    categoryId: 4\n    description: \"Swiss dark chocolate with honey and almond\"\n    shortDescription: \"Dark Swiss chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n  }) { success product { id name } }\n  \n  p15: createProduct(input: {\n    sku: \"TOBLERONE-WHITE-100\"\n    name: \"Toblerone White Chocolate\"\n    slug: \"toblerone-white-100\"\n    brandId: 4\n    categoryId: 4\n    description: \"White chocolate with honey and almond nougat\"\n    shortDescription: \"White Swiss chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n  }) { success product { id name } }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Batch 4: Products 16-20 (More Variety)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  p16: createProduct(input: {\n    sku: \"CADBURY-DAIRY-MILK\"\n    name: \"Cadbury Dairy Milk Chocolate\"\n    slug: \"cadbury-dairy-milk\"\n    brandId: 5\n    categoryId: 2\n    description: \"Classic British milk chocolate\"\n    shortDescription: \"Classic British chocolate\"\n    weight: \"100.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p17: createProduct(input: {\n    sku: \"GODIVA-GIFT-BOX\"\n    name: \"Godiva Chocolate Gift Box Assortment\"\n    slug: \"godiva-gift-box\"\n    brandId: 2\n    categoryId: 5\n    description: \"Premium Belgian chocolate assortment\"\n    shortDescription: \"Belgian chocolate gift box\"\n    weight: \"250.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p18: createProduct(input: {\n    sku: \"LINDT-SWISS-LUXURY\"\n    name: \"Lindt Swiss Luxury Selection\"\n    slug: \"lindt-swiss-luxury\"\n    brandId: 1\n    categoryId: 5\n    description: \"Assorted Swiss chocolates in premium box\"\n    shortDescription: \"Premium Swiss assortment\"\n    weight: \"230.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p19: createProduct(input: {\n    sku: \"FERRERO-BOX-24\"\n    name: \"Ferrero Rocher Collection 24 pieces\"\n    slug: \"ferrero-rocher-24\"\n    brandId: 3\n    categoryId: 5\n    description: \"Large luxury hazelnut chocolate gift box\"\n    shortDescription: \"Large Ferrero gift box\"\n    weight: \"300.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n  \n  p20: createProduct(input: {\n    sku: \"GODIVA-TRUFFLE-ASST\"\n    name: \"Godiva Signature Chocolate Truffles\"\n    slug: \"godiva-truffle-assortment\"\n    brandId: 2\n    categoryId: 5\n    description: \"Handcrafted Belgian chocolate truffles\"\n    shortDescription: \"Premium Belgian truffles\"\n    weight: \"180.0\"\n    unitType: \"GRAMS\"\n    isActive: true\n    featured: true\n  }) { success product { id name } }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💰 STEP 4: Set Prices (All 20 Products)",
+			"item": [
+				{
+					"name": "Set All Prices - Batch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  # Products 1-5: Lindt Dark (AED 45-55)\n  pr1: setProductPrice(input: {productId: 1, priceType: \"RETAIL\", basePrice: \"55.00\", salePrice: \"49.99\", minQuantity: 1, isActive: true}) { success message }\n  pr2: setProductPrice(input: {productId: 2, priceType: \"RETAIL\", basePrice: \"50.00\", salePrice: \"44.99\", minQuantity: 1, isActive: true}) { success message }\n  pr3: setProductPrice(input: {productId: 3, priceType: \"RETAIL\", basePrice: \"52.00\", salePrice: \"46.99\", minQuantity: 1, isActive: true}) { success message }\n  pr4: setProductPrice(input: {productId: 4, priceType: \"RETAIL\", basePrice: \"48.00\", minQuantity: 1, isActive: true}) { success message }\n  pr5: setProductPrice(input: {productId: 5, priceType: \"RETAIL\", basePrice: \"48.00\", minQuantity: 1, isActive: true}) { success message }\n  \n  # Products 6-10: Lindt Milk/White (AED 35-65)\n  pr6: setProductPrice(input: {productId: 6, priceType: \"RETAIL\", basePrice: \"42.00\", salePrice: \"37.99\", minQuantity: 1, isActive: true}) { success message }\n  pr7: setProductPrice(input: {productId: 7, priceType: \"RETAIL\", basePrice: \"45.00\", minQuantity: 1, isActive: true}) { success message }\n  pr8: setProductPrice(input: {productId: 8, priceType: \"RETAIL\", basePrice: \"40.00\", minQuantity: 1, isActive: true}) { success message }\n  pr9: setProductPrice(input: {productId: 9, priceType: \"RETAIL\", basePrice: \"68.00\", salePrice: \"59.99\", minQuantity: 1, isActive: true}) { success message }\n  pr10: setProductPrice(input: {productId: 10, priceType: \"RETAIL\", basePrice: \"65.00\", minQuantity: 1, isActive: true}) { success message }\n  \n  # Products 11-15: Other brands (AED 45-85)\n  pr11: setProductPrice(input: {productId: 11, priceType: \"RETAIL\", basePrice: \"75.00\", salePrice: \"69.99\", minQuantity: 1, isActive: true}) { success message }\n  pr12: setProductPrice(input: {productId: 12, priceType: \"RETAIL\", basePrice: \"85.00\", salePrice: \"79.99\", minQuantity: 1, isActive: true}) { success message }\n  pr13: setProductPrice(input: {productId: 13, priceType: \"RETAIL\", basePrice: \"38.00\", minQuantity: 1, isActive: true}) { success message }\n  pr14: setProductPrice(input: {productId: 14, priceType: \"RETAIL\", basePrice: \"40.00\", minQuantity: 1, isActive: true}) { success message }\n  pr15: setProductPrice(input: {productId: 15, priceType: \"RETAIL\", basePrice: \"38.00\", minQuantity: 1, isActive: true}) { success message }\n  \n  # Products 16-20: More variety (AED 35-120)\n  pr16: setProductPrice(input: {productId: 16, priceType: \"RETAIL\", basePrice: \"35.00\", salePrice: \"29.99\", minQuantity: 1, isActive: true}) { success message }\n  pr17: setProductPrice(input: {productId: 17, priceType: \"RETAIL\", basePrice: \"125.00\", salePrice: \"109.99\", minQuantity: 1, isActive: true}) { success message }\n  pr18: setProductPrice(input: {productId: 18, priceType: \"RETAIL\", basePrice: \"95.00\", salePrice: \"84.99\", minQuantity: 1, isActive: true}) { success message }\n  pr19: setProductPrice(input: {productId: 19, priceType: \"RETAIL\", basePrice: \"145.00\", salePrice: \"129.99\", minQuantity: 1, isActive: true}) { success message }\n  pr20: setProductPrice(input: {productId: 20, priceType: \"RETAIL\", basePrice: \"88.00\", salePrice: \"79.99\", minQuantity: 1, isActive: true}) { success message }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📦 STEP 5: Set Inventory (All 20 Products)",
+			"item": [
+				{
+					"name": "Set All Inventory - Batch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  inv1: updateInventory(input: {productId: 1, quantityInStock: 500, lowStockThreshold: 50}) { success message }\n  inv2: updateInventory(input: {productId: 2, quantityInStock: 450, lowStockThreshold: 50}) { success message }\n  inv3: updateInventory(input: {productId: 3, quantityInStock: 300, lowStockThreshold: 30}) { success message }\n  inv4: updateInventory(input: {productId: 4, quantityInStock: 250, lowStockThreshold: 30}) { success message }\n  inv5: updateInventory(input: {productId: 5, quantityInStock: 250, lowStockThreshold: 30}) { success message }\n  inv6: updateInventory(input: {productId: 6, quantityInStock: 600, lowStockThreshold: 60}) { success message }\n  inv7: updateInventory(input: {productId: 7, quantityInStock: 400, lowStockThreshold: 40}) { success message }\n  inv8: updateInventory(input: {productId: 8, quantityInStock: 350, lowStockThreshold: 35}) { success message }\n  inv9: updateInventory(input: {productId: 9, quantityInStock: 200, lowStockThreshold: 25}) { success message }\n  inv10: updateInventory(input: {productId: 10, quantityInStock: 180, lowStockThreshold: 25}) { success message }\n  inv11: updateInventory(input: {productId: 11, quantityInStock: 300, lowStockThreshold: 30}) { success message }\n  inv12: updateInventory(input: {productId: 12, quantityInStock: 150, lowStockThreshold: 20}) { success message }\n  inv13: updateInventory(input: {productId: 13, quantityInStock: 400, lowStockThreshold: 40}) { success message }\n  inv14: updateInventory(input: {productId: 14, quantityInStock: 350, lowStockThreshold: 35}) { success message }\n  inv15: updateInventory(input: {productId: 15, quantityInStock: 300, lowStockThreshold: 30}) { success message }\n  inv16: updateInventory(input: {productId: 16, quantityInStock: 800, lowStockThreshold: 80}) { success message }\n  inv17: updateInventory(input: {productId: 17, quantityInStock: 100, lowStockThreshold: 15}) { success message }\n  inv18: updateInventory(input: {productId: 18, quantityInStock: 120, lowStockThreshold: 15}) { success message }\n  inv19: updateInventory(input: {productId: 19, quantityInStock: 80, lowStockThreshold: 10}) { success message }\n  inv20: updateInventory(input: {productId: 20, quantityInStock: 90, lowStockThreshold: 12}) { success message }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "✅ STEP 6: Verify Products",
+			"item": [
+				{
+					"name": "Get All Products (Verify)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  products(limit: 25) {\n    id\n    name\n    sku\n    brand {\n      name\n    }\n    category {\n      name\n    }\n    prices {\n      basePrice\n      salePrice\n    }\n    inventory {\n      quantityInStock\n      isInStock\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": [
+								"{{base_url}}"
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}

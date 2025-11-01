@@ -10,6 +10,7 @@ from django.db import IntegrityError
 from django.core.exceptions import ValidationError
 from datetime import timedelta
 import logging
+import uuid
 from decimal import Decimal
 
 from .models import Cart, CartItem, Order, OrderItem, ShippingAddress, OrderStatusHistory
@@ -250,6 +251,10 @@ class AddToCart(graphene.Mutation):
                     success=False, 
                     message="Quantity must be greater than 0"
                 )
+            
+            # Generate session key if not provided or empty
+            if not session_key or session_key.strip() == "":
+                session_key = str(uuid.uuid4())
             
             # Get or create cart
             cart, created = Cart.objects.get_or_create(

@@ -72,16 +72,17 @@ class CartType(DjangoObjectType):
         return self.items.all().select_related('product', 'variant')
     
     def resolve_subtotal(self, info):
-        return sum(item.subtotal for item in self.items.all())
+        subtotal = sum((item.subtotal for item in self.items.all()), Decimal('0'))
+        return subtotal
     
     def resolve_tax_amount(self, info):
         """Calculate VAT (5% in UAE)"""
-        subtotal = sum(item.subtotal for item in self.items.all())
+        subtotal = sum((item.subtotal for item in self.items.all()), Decimal('0'))
         return subtotal * Decimal('0.05')
     
     def resolve_total(self, info):
         """Calculate total with VAT"""
-        subtotal = sum(item.subtotal for item in self.items.all())
+        subtotal = sum((item.subtotal for item in self.items.all()), Decimal('0'))
         tax = subtotal * Decimal('0.05')
         return subtotal + tax
     

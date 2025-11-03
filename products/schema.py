@@ -324,7 +324,10 @@ class ProductQuery(graphene.ObjectType):
     # ========================================================================
     
     def resolve_product(self, info, id=None, slug=None):
-        """Get a single product by ID or slug"""
+        """
+        Get a single product by ID or slug
+        PUBLIC ENDPOINT - No authentication required
+        """
         queryset = Product.objects.filter(is_active=True)
         
         if id:
@@ -351,7 +354,8 @@ class ProductQuery(graphene.ObjectType):
                         in_stock=None, featured=None, min_price=None, max_price=None,
                         sort_by=None, limit=None):
         """
-        Get list of products with optional filters
+        Get list of products with optional filters and sorting
+        PUBLIC ENDPOINT - No authentication required
         Optimized with select_related and prefetch_related
         """
         queryset = Product.objects.filter(is_active=True)
@@ -428,7 +432,10 @@ class ProductQuery(graphene.ObjectType):
         )
     
     def resolve_categories(self, info, parent_id=None):
-        """Get list of categories, optionally filtered by parent"""
+        """
+        Get list of categories, optionally filtered by parent
+        PUBLIC ENDPOINT - No authentication required
+        """
         queryset = Category.objects.filter(is_active=True)
         
         if parent_id is not None:
@@ -437,7 +444,10 @@ class ProductQuery(graphene.ObjectType):
         return queryset.order_by('display_order', 'name')
     
     def resolve_category(self, info, id=None, slug=None):
-        """Get a single category by ID or slug"""
+        """
+        Get a single category by ID or slug
+        PUBLIC ENDPOINT - No authentication required
+        """
         if id:
             return Category.objects.filter(id=id, is_active=True).first()
         if slug:
@@ -445,7 +455,10 @@ class ProductQuery(graphene.ObjectType):
         return None
     
     def resolve_brands(self, info, is_active=None):
-        """Get list of brands, optionally filtered by active status"""
+        """
+        Get list of brands, optionally filtered by active status
+        PUBLIC ENDPOINT - No authentication required
+        """
         queryset = Brand.objects.all()
         
         if is_active is not None:

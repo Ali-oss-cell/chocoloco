@@ -205,3 +205,19 @@ GRAPHQL_JWT = {
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=30),
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
 }
+
+# ==============================================================================
+# Payment Gateway Settings
+# ==============================================================================
+
+# Ziina Payment Gateway (UAE Central Bank Licensed - Instant Payments)
+ZIINA_API_KEY = config('ZIINA_API_KEY', default='')
+ZIINA_MERCHANT_ID = config('ZIINA_MERCHANT_ID', default='')
+ZIINA_PUBLIC_KEY = config('ZIINA_PUBLIC_KEY', default='')
+ZIINA_WEBHOOK_SECRET = config('ZIINA_WEBHOOK_SECRET', default='')
+ZIINA_BASE_URL = config('ZIINA_BASE_URL', default='https://api-v2.ziina.com')
+ZIINA_TEST_MODE = config('ZIINA_TEST_MODE', default=True, cast=bool)
+
+# Frontend/Backend URLs (for payment redirects)
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')

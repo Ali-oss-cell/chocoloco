@@ -6,6 +6,7 @@ import graphene
 from products.schema import ProductQuery, ProductMutation
 from orders.schema import OrderQuery, OrderMutation
 from users.schema import UserQuery, UserMutation
+from payments.schema import PaymentQuery, PaymentMutation
 
 # Future imports for Phase 2 (Wholesale):
 # from users.schema import UserQuery, UserMutation
@@ -15,6 +16,7 @@ class Query(
     UserQuery,
     ProductQuery,
     OrderQuery,
+    PaymentQuery,
     graphene.ObjectType
 ):
     """
@@ -23,6 +25,7 @@ class Query(
     Available Queries:
     - Products: products, product, categories, brands
     - Orders: cart, order
+    - Payments: payment, payments, payment_gateways, available_gateways
     """
     pass
 
@@ -31,6 +34,7 @@ class Mutation(
     UserMutation,
     ProductMutation,
     OrderMutation,
+    PaymentMutation,
     graphene.ObjectType
 ):
     """
@@ -41,6 +45,7 @@ class Mutation(
     - Cart: addToCart, updateCartItem, removeFromCart, clearCart
     - Orders (Customer): createRetailOrder
     - Orders (Admin): updateOrderStatus, cancelOrder, updateShippingAddress
+    - Payments: createPaymentSession, verifyPayment, processRefund, handleWebhook
     """
     pass
 

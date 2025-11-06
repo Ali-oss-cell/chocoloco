@@ -30,6 +30,16 @@
 			"key": "session_id",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "payment_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
 		}
 	],
 	"item": [
@@ -989,6 +999,165 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation {\n  updateShippingAddress(orderId: 1, input: {\n    fullName: \"Jane Doe\"\n    phone: \"+971509876543\"\n    streetAddress: \"456 New Street\"\n    city: \"Abu Dhabi\"\n    emirate: \"Abu Dhabi\"\n    postalCode: \"67890\"\n    country: \"UAE\"\n  }) {\n    success\n    message\n    order {\n      id\n      orderNumber\n      shippingAddress {\n        fullName\n        city\n        emirate\n      }\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💳 Payments - Ziina",
+			"item": [
+				{
+					"name": "STEP 1: Create Payment Session (Ziina)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.createPaymentSession && response.data.createPaymentSession.success) {",
+									"        const paymentId = response.data.createPaymentSession.paymentId;",
+									"        const paymentUrl = response.data.createPaymentSession.paymentUrl;",
+									"        if (paymentId) {",
+									"            pm.collectionVariables.set('payment_id', paymentId);",
+									"            console.log('✅ Payment ID saved:', paymentId);",
+									"        }",
+									"        if (paymentUrl) {",
+									"            console.log('🔗 Payment URL:', paymentUrl);",
+									"            console.log('👉 Copy this URL and open in browser to complete payment');",
+									"        }",
+									"    } else {",
+									"        console.log('❌ Payment creation failed:', response);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation CreateZiinaPayment($input: PaymentSessionInput!, $gatewayName: String!) {\n  createPaymentSession(input: $input, gatewayName: $gatewayName) {\n    success\n    message\n    paymentUrl\n    paymentId\n    expiresAt\n    gatewayResponse\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"orderId\": \"{{order_id}}\",\n    \"amount\": \"105.00\",\n    \"currency\": \"AED\",\n    \"customerEmail\": \"test@example.com\",\n    \"customerPhone\": \"+971501234567\",\n    \"customerName\": \"Test Customer\",\n    \"taxAmount\": \"5.00\",\n    \"shippingAmount\": \"0.00\",\n    \"discountAmount\": \"0.00\",\n    \"items\": [\n      {\n        \"name\": \"Premium Chocolate Box\",\n        \"price\": \"100.00\",\n        \"quantity\": 1,\n        \"sku\": \"CHOC-001\"\n      }\n    ],\n    \"shippingAddress\": {\n      \"fullName\": \"Test Customer\",\n      \"phoneNumber\": \"+971501234567\",\n      \"email\": \"test@example.com\",\n      \"addressLine1\": \"123 Test Street\",\n      \"city\": \"Dubai\",\n      \"emirate\": \"DUBAI\",\n      \"postalCode\": \"12345\"\n    }\n  },\n  \"gatewayName\": \"ZIINA\"\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					}
+				},
+				{
+					"name": "STEP 2: Verify Payment Status",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation VerifyZiinaPayment($input: PaymentVerificationInput!) {\n  verifyPayment(input: $input) {\n    success\n    message\n    status\n    amount\n    transactionId\n    gatewayResponse\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"paymentId\": \"{{payment_id}}\",\n    \"gatewayName\": \"ZIINA\"\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Payment by ID",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query GetPayment($paymentId: String!) {\n  payment(paymentId: $paymentId) {\n    id\n    paymentId\n    orderId\n    gateway\n    status\n    amount\n    currency\n    paymentUrl\n    transactionId\n    createdAt\n    verifiedAt\n    gatewayResponse\n  }\n}",
+								"variables": "{\n  \"paymentId\": \"{{payment_id}}\"\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					}
+				},
+				{
+					"name": "Get Available Payment Gateways",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query GetPaymentGateways($amount: Decimal) {\n  availableGateways(amount: $amount) {\n    suitableGateways\n    allGateways\n  }\n  paymentGateways(isActive: true) {\n    id\n    name\n    displayName\n    isActive\n    config\n  }\n}",
+								"variables": "{\n  \"amount\": \"105.00\"\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					}
+				},
+				{
+					"name": "Get All Payments",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query GetPayments($gateway: String, $status: String) {\n  payments(gateway: $gateway, status: $status) {\n    id\n    paymentId\n    orderId\n    gateway\n    status\n    amount\n    currency\n    createdAt\n    verifiedAt\n  }\n}",
+								"variables": "{\n  \"gateway\": \"ZIINA\",\n  \"status\": null\n}"
 							}
 						},
 						"url": {

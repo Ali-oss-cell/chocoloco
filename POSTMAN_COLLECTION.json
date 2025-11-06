@@ -40,6 +40,51 @@
 			"key": "order_id",
 			"value": "",
 			"type": "string"
+		},
+		{
+			"key": "order_total",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_tax",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_delivery",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_subtotal",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_customer_name",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_customer_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_customer_phone",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_items",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_shipping_address",
+			"value": "",
+			"type": "string"
 		}
 	],
 	"item": [
@@ -908,6 +953,67 @@
 			"item": [
 				{
 					"name": "Create Retail Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.createRetailOrder && response.data.createRetailOrder.success) {",
+									"        const order = response.data.createRetailOrder.order;",
+									"        if (order && order.orderNumber) {",
+									"            pm.collectionVariables.set('order_id', order.orderNumber);",
+									"            pm.collectionVariables.set('order_total', order.totalAmount);",
+									"            pm.collectionVariables.set('order_tax', order.taxAmount);",
+									"            pm.collectionVariables.set('order_delivery', order.deliveryFee || '0.00');",
+									"            pm.collectionVariables.set('order_subtotal', order.subtotal);",
+									"            ",
+									"            // Save customer info",
+									"            pm.collectionVariables.set('order_customer_name', order.customerName || 'John Doe');",
+									"            pm.collectionVariables.set('order_customer_email', order.customerEmail || 'john@example.com');",
+									"            pm.collectionVariables.set('order_customer_phone', order.customerPhone || '+971501234567');",
+									"            ",
+									"            // Save order items as JSON string",
+									"            if (order.items && order.items.length > 0) {",
+									"                const items = order.items.map(item => ({",
+									"                    name: item.productName,",
+									"                    price: item.unitPrice,",
+									"                    quantity: item.quantity,",
+									"                    sku: item.productSku || ''",
+									"                }));",
+									"                pm.collectionVariables.set('order_items', JSON.stringify(items));",
+									"            }",
+									"            ",
+									"            // Save shipping address as JSON string (keep snake_case for now, will convert in payment request)",
+									"            if (order.shippingAddress) {",
+									"                const addr = order.shippingAddress;",
+									"                const shippingAddress = {",
+									"                    full_name: addr.fullName || order.customerName,",
+									"                    phone_number: addr.phoneNumber || order.customerPhone,",
+									"                    email: addr.email || order.customerEmail,",
+									"                    address_line1: addr.addressLine1,",
+									"                    address_line2: addr.addressLine2 || '',",
+									"                    city: addr.city,",
+									"                    emirate: addr.emirate,",
+									"                    postal_code: addr.postalCode || ''",
+									"                };",
+									"                pm.collectionVariables.set('order_shipping_address', JSON.stringify(shippingAddress));",
+									"            }",
+									"            ",
+									"            console.log('✅ Order ID saved:', order.orderNumber);",
+									"            console.log('💰 Order Total:', order.totalAmount);",
+									"            console.log('📦 Order Items:', order.items);",
+									"        }",
+									"    } else {",
+									"        console.log('❌ Order creation failed:', response);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "noauth"
@@ -927,7 +1033,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation {\n  createRetailOrder(\n    sessionKey: \"{{session_id}}\"\n    customerInfo: {\n      name: \"John Doe\"\n      email: \"john@example.com\"\n      phone: \"+971501234567\"\n      company: \"\"\n    }\n    shippingAddress: {\n      fullName: \"John Doe\"\n      phoneNumber: \"+971501234567\"\n      email: \"john@example.com\"\n      addressLine1: \"123 Main Street\"\n      addressLine2: \"Apartment 4B\"\n      city: \"Dubai\"\n      emirate: \"DUBAI\"\n      area: \"Downtown\"\n      postalCode: \"12345\"\n      deliveryInstructions: \"Please handle with care\"\n    }\n  ) {\n    success\n    message\n    order {\n      id\n      orderNumber\n      status\n      orderType\n      subtotal\n      taxAmount\n      deliveryFee\n      totalAmount\n      customerName\n      customerEmail\n      customerPhone\n      shippingAddress {\n        fullName\n        phoneNumber\n        city\n        emirate\n        addressLine1\n      }\n      items {\n        id\n        productName\n        productSku\n        quantity\n        unitPrice\n        totalPrice\n      }\n    }\n  }\n}"
+								"query": "mutation {\n  createRetailOrder(\n    sessionKey: \"{{session_id}}\"\n    customerInfo: {\n      name: \"John Doe\"\n      email: \"john@example.com\"\n      phone: \"+971501234567\"\n      company: \"\"\n    }\n    shippingAddress: {\n      fullName: \"John Doe\"\n      phoneNumber: \"+971501234567\"\n      email: \"john@example.com\"\n      addressLine1: \"123 Main Street\"\n      addressLine2: \"Apartment 4B\"\n      city: \"Dubai\"\n      emirate: \"DUBAI\"\n      area: \"Downtown\"\n      postalCode: \"12345\"\n      deliveryInstructions: \"Please handle with care\"\n    }\n  ) {\n    success\n    message\n    order {\n      id\n      orderNumber\n      status\n      orderType\n      subtotal\n      taxAmount\n      deliveryFee\n      totalAmount\n      customerName\n      customerEmail\n      customerPhone\n      shippingAddress {\n        fullName\n        phoneNumber\n        city\n        emirate\n        addressLine1\n        addressLine2\n        postalCode\n      }\n      items {\n        id\n        productName\n        productSku\n        quantity\n        unitPrice\n        totalPrice\n      }\n    }\n  }\n}"
 							}
 						},
 						"url": {
@@ -1016,6 +1122,116 @@
 					"name": "STEP 1: Create Payment Session (Ziina)",
 					"event": [
 						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Build payment input from saved order data",
+									"const orderId = pm.collectionVariables.get('order_id') || '{{order_id}}';",
+									"const orderTotal = pm.collectionVariables.get('order_total') || '119.98';",
+									"const orderTax = pm.collectionVariables.get('order_tax') || '5.00';",
+									"const orderDelivery = pm.collectionVariables.get('order_delivery') || '15.00';",
+									"const customerName = pm.collectionVariables.get('order_customer_name') || 'John Doe';",
+									"const customerEmail = pm.collectionVariables.get('order_customer_email') || 'john@example.com';",
+									"const customerPhone = pm.collectionVariables.get('order_customer_phone') || '+971501234567';",
+									"",
+									"// Parse order items",
+									"let items = [];",
+									"try {",
+									"    const itemsJson = pm.collectionVariables.get('order_items');",
+									"    if (itemsJson) {",
+									"        items = JSON.parse(itemsJson);",
+									"    } else {",
+									"        // Fallback to default item",
+									"        items = [{",
+									"            name: 'Lindt Excellence Dark 85%',",
+									"            price: '49.99',",
+									"            quantity: 2,",
+									"            sku: 'LINDT-DARK-85'",
+									"        }];",
+									"    }",
+									"} catch (e) {",
+									"    console.log('Error parsing items:', e);",
+									"    items = [{",
+									"        name: 'Lindt Excellence Dark 85%',",
+									"        price: '49.99',",
+									"        quantity: 2,",
+									"        sku: 'LINDT-DARK-85'",
+									"    }];",
+									"}",
+									"",
+									"// Parse shipping address and convert to camelCase for GraphQL",
+									"let shippingAddress = {};",
+									"try {",
+									"    const addrJson = pm.collectionVariables.get('order_shipping_address');",
+									"    if (addrJson) {",
+									"        const addr = JSON.parse(addrJson);",
+									"        // Convert snake_case to camelCase for GraphQL",
+									"        shippingAddress = {",
+									"            fullName: addr.full_name || customerName,",
+									"            phoneNumber: addr.phone_number || customerPhone,",
+									"            email: addr.email || customerEmail,",
+									"            addressLine1: addr.address_line1,",
+									"            addressLine2: addr.address_line2 || '',",
+									"            city: addr.city,",
+									"            emirate: addr.emirate,",
+									"            postalCode: addr.postal_code || ''",
+									"        };",
+									"    } else {",
+									"        // Fallback to default address",
+									"        shippingAddress = {",
+									"            fullName: customerName,",
+									"            phoneNumber: customerPhone,",
+									"            email: customerEmail,",
+									"            addressLine1: '123 Main Street',",
+									"            city: 'Dubai',",
+									"            emirate: 'DUBAI',",
+									"            postalCode: '12345'",
+									"        };",
+									"    }",
+									"} catch (e) {",
+									"    console.log('Error parsing shipping address:', e);",
+									"    shippingAddress = {",
+									"        fullName: customerName,",
+									"        phoneNumber: customerPhone,",
+									"        email: customerEmail,",
+									"        addressLine1: '123 Main Street',",
+									"        city: 'Dubai',",
+									"        emirate: 'DUBAI',",
+									"        postalCode: '12345'",
+									"    };",
+									"}",
+									"",
+									"// Build the input object (GraphQL uses camelCase)",
+									"const paymentInput = {",
+									"    input: {",
+									"        orderId: orderId,",
+									"        amount: orderTotal,",
+									"        currency: 'AED',",
+									"        customerEmail: customerEmail,",
+									"        customerPhone: customerPhone,",
+									"        customerName: customerName,",
+									"        taxAmount: orderTax,",
+									"        shippingAmount: orderDelivery,",
+									"        discountAmount: '0.00',",
+									"        items: items,",
+									"        shippingAddress: shippingAddress",
+									"    },",
+									"    gatewayName: 'ZIINA'",
+									"};",
+									"",
+									"// Set the variables for GraphQL request",
+									"pm.request.body.graphql.variables = JSON.stringify(paymentInput);",
+									"",
+									"console.log('📦 Payment input prepared:');",
+									"console.log('Order ID:', orderId);",
+									"console.log('Amount:', orderTotal);",
+									"console.log('Items:', items.length);",
+									"console.log('Shipping Address:', shippingAddress.city);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
 							"listen": "test",
 							"script": {
 								"exec": [
@@ -1056,7 +1272,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateZiinaPayment($input: PaymentSessionInput!, $gatewayName: String!) {\n  createPaymentSession(input: $input, gatewayName: $gatewayName) {\n    success\n    message\n    paymentUrl\n    paymentId\n    expiresAt\n    gatewayResponse\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"order_id\": \"{{order_id}}\",\n    \"amount\": \"105.00\",\n    \"currency\": \"AED\",\n    \"customer_email\": \"test@example.com\",\n    \"customer_phone\": \"+971501234567\",\n    \"customer_name\": \"Test Customer\",\n    \"tax_amount\": \"5.00\",\n    \"shipping_amount\": \"0.00\",\n    \"discount_amount\": \"0.00\",\n    \"items\": [\n      {\n        \"name\": \"Premium Chocolate Box\",\n        \"price\": \"100.00\",\n        \"quantity\": 1,\n        \"sku\": \"CHOC-001\"\n      }\n    ],\n    \"shipping_address\": {\n      \"full_name\": \"Test Customer\",\n      \"phone_number\": \"+971501234567\",\n      \"email\": \"test@example.com\",\n      \"address_line1\": \"123 Test Street\",\n      \"city\": \"Dubai\",\n      \"emirate\": \"DUBAI\",\n      \"postal_code\": \"12345\"\n    }\n  },\n  \"gatewayName\": \"ZIINA\"\n}"
+								"variables": "{}"
 							}
 						},
 						"url": {

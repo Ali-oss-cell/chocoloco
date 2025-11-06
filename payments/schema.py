@@ -9,6 +9,7 @@ from decimal import Decimal
 from typing import Dict, Any
 
 from .models import PaymentGateway, Payment, Refund, PaymentWebhook
+from orders.models import Order
 from .services.manager import payment_manager
 
 
@@ -263,17 +264,48 @@ class CreatePaymentSession(graphene.Mutation):
             result = payment_manager.create_payment_session(order_data, gateway_name)
             
             if result['success']:
+                # Get Order by order_number
+                try:
+                    order = Order.objects.get(order_number=order_data['order_id'])
+                except Order.DoesNotExist:
+                    return CreatePaymentSession(
+                        success=False,
+                        message=f"Order not found: {order_data['order_id']}",
+                        payment_url=None,
+                        payment_id=None,
+                        expires_at=None,
+                        gateway_response={}
+                    )
+                
+                # Get PaymentGateway instance
+                try:
+                    payment_gateway = PaymentGateway.objects.get(name=gateway_name)
+                except PaymentGateway.DoesNotExist:
+                    # Create PaymentGateway if it doesn't exist (for development)
+                    payment_gateway = PaymentGateway.objects.create(
+                        name=gateway_name,
+                        display_name=gateway_name.title(),
+                        is_active=True,
+                        is_test_mode=True,
+                        api_key='',
+                        api_secret='',
+                        supported_currencies=['AED']
+                    )
+                
                 # Save payment record to database
                 payment = Payment.objects.create(
-                    order_id=order_data['order_id'],
+                    order=order,
                     payment_id=result['payment_id'],
-                    gateway=gateway_name,
+                    gateway=payment_gateway,
+                    payment_method='CREDIT_CARD',  # Default, can be updated later
                     amount=order_data['amount'],
                     currency=order_data['currency'],
-                    status='pending',
-                    payment_url=result['payment_url'],
-                    expires_at=result['expires_at'],
-                    gateway_response=result.get('gateway_response', {})
+                    status='PENDING',
+                    gateway_response={
+                        **result.get('gateway_response', {}),
+                        'payment_url': result.get('payment_url'),
+                        'expires_at': result.get('expires_at')
+                    }
                 )
                 
                 return CreatePaymentSession(

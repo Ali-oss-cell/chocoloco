@@ -48,6 +48,28 @@ class PaymentWebhookType(DjangoObjectType):
 # Input Types
 # ============================================================================
 
+class PaymentItemInput(graphene.InputObjectType):
+    """Input for payment item"""
+    name = graphene.String(required=True)
+    price = graphene.Decimal(required=True)
+    quantity = graphene.Int(required=True)
+    sku = graphene.String()
+
+
+class ShippingAddressInput(graphene.InputObjectType):
+    """Input for shipping address"""
+    full_name = graphene.String(required=True)
+    phone_number = graphene.String(required=True)
+    email = graphene.String(required=True)
+    address_line1 = graphene.String(required=True)
+    address_line2 = graphene.String()
+    city = graphene.String(required=True)
+    emirate = graphene.String(required=True)
+    area = graphene.String()
+    postal_code = graphene.String()
+    delivery_instructions = graphene.String()
+
+
 class PaymentSessionInput(graphene.InputObjectType):
     """Input for creating payment session"""
     order_id = graphene.String(required=True)
@@ -60,9 +82,9 @@ class PaymentSessionInput(graphene.InputObjectType):
     tax_amount = graphene.Decimal(default_value=0)
     shipping_amount = graphene.Decimal(default_value=0)
     discount_amount = graphene.Decimal(default_value=0)
-    items = graphene.List(graphene.JSONString)
-    billing_address = graphene.JSONString()
-    shipping_address = graphene.JSONString()
+    items = graphene.List(PaymentItemInput)
+    billing_address = graphene.Field(ShippingAddressInput)
+    shipping_address = graphene.Field(ShippingAddressInput)
 
 
 class PaymentVerificationInput(graphene.InputObjectType):
@@ -178,17 +200,76 @@ class CreatePaymentSession(graphene.Mutation):
     
     def mutate(self, info, input, gateway_name):
         try:
+            # Convert input to dict format expected by payment manager
+            order_data = {
+                'order_id': input.order_id,
+                'amount': Decimal(str(input.amount)),
+                'currency': input.currency,
+                'customer_email': input.customer_email,
+                'customer_phone': input.customer_phone,
+                'customer_name': getattr(input, 'customer_name', None),
+                'customer_id': getattr(input, 'customer_id', None),
+                'tax_amount': Decimal(str(getattr(input, 'tax_amount', 0))),
+                'shipping_amount': Decimal(str(getattr(input, 'shipping_amount', 0))),
+                'discount_amount': Decimal(str(getattr(input, 'discount_amount', 0))),
+            }
+            
+            # Convert items from input objects to dicts
+            if hasattr(input, 'items') and input.items:
+                order_data['items'] = [
+                    {
+                        'name': item.name,
+                        'price': str(item.price),
+                        'quantity': item.quantity,
+                        'sku': getattr(item, 'sku', None)
+                    }
+                    for item in input.items
+                ]
+            else:
+                order_data['items'] = []
+            
+            # Convert shipping address from input object to dict
+            if hasattr(input, 'shipping_address') and input.shipping_address:
+                addr = input.shipping_address
+                order_data['shipping_address'] = {
+                    'fullName': addr.full_name,
+                    'phoneNumber': addr.phone_number,
+                    'email': addr.email,
+                    'addressLine1': addr.address_line1,
+                    'addressLine2': getattr(addr, 'address_line2', None),
+                    'city': addr.city,
+                    'emirate': addr.emirate,
+                    'area': getattr(addr, 'area', None),
+                    'postalCode': getattr(addr, 'postal_code', None),
+                    'deliveryInstructions': getattr(addr, 'delivery_instructions', None)
+                }
+            
+            # Convert billing address if provided
+            if hasattr(input, 'billing_address') and input.billing_address:
+                addr = input.billing_address
+                order_data['billing_address'] = {
+                    'fullName': addr.full_name,
+                    'phoneNumber': addr.phone_number,
+                    'email': addr.email,
+                    'addressLine1': addr.address_line1,
+                    'addressLine2': getattr(addr, 'address_line2', None),
+                    'city': addr.city,
+                    'emirate': addr.emirate,
+                    'area': getattr(addr, 'area', None),
+                    'postalCode': getattr(addr, 'postal_code', None)
+                }
+            
             # Create payment session
-            result = payment_manager.create_payment_session(input, gateway_name)
+            result = payment_manager.create_payment_session(order_data, gateway_name)
             
             if result['success']:
                 # Save payment record to database
                 payment = Payment.objects.create(
-                    order_id=input['order_id'],
+                    order_id=order_data['order_id'],
                     payment_id=result['payment_id'],
                     gateway=gateway_name,
-                    amount=Decimal(str(input['amount'])),
-                    currency=input['currency'],
+                    amount=order_data['amount'],
+                    currency=order_data['currency'],
                     status='pending',
                     payment_url=result['payment_url'],
                     expires_at=result['expires_at'],

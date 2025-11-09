@@ -7,10 +7,13 @@ from graphene_django import DjangoObjectType
 from django.utils import timezone
 from decimal import Decimal
 from typing import Dict, Any
+import logging
 
 from .models import PaymentGateway, Payment, Refund, PaymentWebhook
-from orders.models import Order
+from orders.models import Order, OrderStatusHistory
 from .services.manager import payment_manager
+
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -362,13 +365,68 @@ class VerifyPayment(graphene.Mutation):
                 # Update payment record
                 try:
                     payment = Payment.objects.get(payment_id=input['payment_id'])
-                    payment.status = result['status']
-                    payment.transaction_id = result.get('transaction_id', '')
+                    
+                    # Convert status from Ziina format to model format
+                    status_lower = result.get('status', '').lower()
+                    status_mapping = {
+                        'completed': 'CAPTURED',
+                        'pending': 'PENDING',
+                        'failed': 'FAILED',
+                        'cancelled': 'CANCELLED',
+                        'canceled': 'CANCELLED',
+                        'authorized': 'AUTHORIZED',
+                        'refunded': 'REFUNDED'
+                    }
+                    payment_status = status_mapping.get(status_lower, 'PENDING')
+                    
+                    payment.status = payment_status
+                    payment.gateway_transaction_id = result.get('transaction_id', '')
                     payment.gateway_response = result.get('gateway_response', {})
-                    payment.verified_at = timezone.now()
+                    
+                    # Set appropriate timestamp based on status
+                    if payment_status == 'CAPTURED':
+                        payment.captured_at = timezone.now()
+                    elif payment_status == 'AUTHORIZED':
+                        payment.authorized_at = timezone.now()
+                    elif payment_status == 'FAILED':
+                        payment.failed_at = timezone.now()
+                    
                     payment.save()
+                    
+                    # Update order status if payment successful
+                    if payment_status == 'CAPTURED':
+                        order = payment.order
+                        if order.status == 'PENDING':
+                            order.status = 'CONFIRMED'
+                            order.confirmed_at = timezone.now()
+                            order.save()
+                            
+                            # Create status history
+                            OrderStatusHistory.objects.create(
+                                order=order,
+                                status='CONFIRMED',
+                                notes=f'Payment confirmed via Ziina - Payment ID: {input["payment_id"]}'
+                            )
+                            
+                            # Deduct inventory (reserved → deducted)
+                            from products.models import Product, ProductVariant
+                            for item in order.items.all():
+                                if item.variant:
+                                    variant = item.variant
+                                    variant.reserved_quantity = max(0, variant.reserved_quantity - item.quantity)
+                                    variant.quantity_in_stock = max(0, variant.quantity_in_stock - item.quantity)
+                                    variant.save()
+                                else:
+                                    if hasattr(item.product, 'inventory'):
+                                        inventory = item.product.inventory
+                                        inventory.reserved_quantity = max(0, inventory.reserved_quantity - item.quantity)
+                                        inventory.quantity_in_stock = max(0, inventory.quantity_in_stock - item.quantity)
+                                        inventory.save()
+                    
                 except Payment.DoesNotExist:
                     pass
+                except Exception as e:
+                    logger.error(f"Error updating payment: {str(e)}", exc_info=True)
                 
                 return VerifyPayment(
                     success=True,

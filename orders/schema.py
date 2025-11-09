@@ -205,7 +205,8 @@ class OrderQuery(graphene.ObjectType):
         ).first()
     
     def resolve_orders(self, info, status=None, order_type=None, limit=None):
-        """Get list of orders with optional filters"""
+        """Get list of orders with optional filters (admin only)"""
+        _require_staff(info)  # Require staff authentication
         queryset = Order.objects.all().order_by('-created_at')
         
         if status:

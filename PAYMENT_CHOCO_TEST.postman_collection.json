@@ -1,0 +1,792 @@
+{
+	"info": {
+		"_postman_id": "payment-choco-test-collection",
+		"name": "Payment Choco Test",
+		"description": "Complete payment and order testing collection for Chocolate E-Commerce Platform\n\nServer: http://164.90.215.173/graphql/\n\nTest Flow:\n1. Login as Admin\n2. Check Products\n3. Add to Cart\n4. Create Order\n5. Create Payment Session (Ziina)\n6. Verify Payment & Order Status\n7. Manage Order Status",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://164.90.215.173/graphql/",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "session_key",
+			"value": "test-session-{{$timestamp}}",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "order_number",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "payment_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "payment_url",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "product_id",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "order_total",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Login as Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.tokenAuth) {",
+									"        pm.collectionVariables.set('jwt_token', response.data.tokenAuth.token);",
+									"        console.log('✅ JWT Token saved:', response.data.tokenAuth.token.substring(0, 20) + '...');",
+									"        pm.test('Token saved successfully', function () {",
+									"            pm.expect(response.data.tokenAuth.token).to.exist;",
+									"        });",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  tokenAuth(username: \"choco\", password: \"311225ali\") {\n    token\n    refreshToken\n    user {\n      username\n      email\n      isStaff\n      isSuperuser\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Current User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  me {\n    id\n    username\n    email\n    firstName\n    lastName\n    isStaff\n    isSuperuser\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Products & Inventory",
+			"item": [
+				{
+					"name": "Get Products List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.products && response.data.products.length > 0) {",
+									"        const firstProduct = response.data.products[0];",
+									"        pm.collectionVariables.set('product_id', firstProduct.id);",
+									"        console.log('✅ Product ID saved:', firstProduct.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  products(limit: 5) {\n    id\n    name\n    sku\n    slug\n    isActive\n    prices {\n      basePrice\n      salePrice\n      priceType\n    }\n    inventory {\n      id\n      quantityInStock\n      reservedQuantity\n      availableQuantity\n      isInStock\n    }\n    images {\n      image\n      isPrimary\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Product Inventory",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  product(id: {{product_id}}) {\n    id\n    name\n    sku\n    inventory {\n      quantityInStock\n      reservedQuantity\n      availableQuantity\n      isInStock\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Cart Operations",
+			"item": [
+				{
+					"name": "Add to Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.addToCart && response.data.addToCart.success) {",
+									"        console.log('✅ Item added to cart');",
+									"        if (response.data.addToCart.cart) {",
+									"            pm.collectionVariables.set('order_total', response.data.addToCart.cart.total);",
+									"        }",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  addToCart(\n    sessionKey: \"{{session_key}}\"\n    productId: {{product_id}}\n    quantity: 2\n  ) {\n    success\n    message\n    cartItem {\n      id\n      quantity\n      priceAtAddition\n    }\n    cart {\n      id\n      sessionKey\n      subtotal\n      taxAmount\n      total\n      itemCount\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "View Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  cart(sessionKey: \"{{session_key}}\") {\n    id\n    sessionKey\n    subtotal\n    taxAmount\n    total\n    itemCount\n    items {\n      id\n      quantity\n      priceAtAddition\n      subtotal\n      product {\n        name\n        sku\n      }\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Order Creation",
+			"item": [
+				{
+					"name": "Create Retail Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.createRetailOrder && response.data.createRetailOrder.success) {",
+									"        const order = response.data.createRetailOrder.order;",
+									"        pm.collectionVariables.set('order_id', order.id);",
+									"        pm.collectionVariables.set('order_number', order.orderNumber);",
+									"        pm.collectionVariables.set('order_total', order.totalAmount);",
+									"        console.log('✅ Order created:', order.orderNumber);",
+									"        console.log('Order ID:', order.id);",
+									"        console.log('Total:', order.totalAmount);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  createRetailOrder(\n    sessionKey: \"{{session_key}}\"\n    customerInfo: {\n      name: \"Ahmed Al Maktoum\"\n      email: \"ahmed@test.ae\"\n      phone: \"+971501234567\"\n    }\n    shippingAddress: {\n      fullName: \"Ahmed Al Maktoum\"\n      phoneNumber: \"+971501234567\"\n      email: \"ahmed@test.ae\"\n      addressLine1: \"Villa 123, Palm Jumeirah\"\n      city: \"Dubai\"\n      emirate: \"DUBAI\"\n      postalCode: \"12345\"\n    }\n  ) {\n    success\n    message\n    order {\n      id\n      orderNumber\n      status\n      orderType\n      customerName\n      customerEmail\n      subtotal\n      taxAmount\n      deliveryFee\n      totalAmount\n      items {\n        productName\n        quantity\n        unitPrice\n        totalPrice\n      }\n      shippingAddress {\n        fullName\n        city\n        emirate\n      }\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "View Order Details",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  order(orderNumber: \"{{order_number}}\") {\n    id\n    orderNumber\n    status\n    orderType\n    customerName\n    customerEmail\n    customerPhone\n    subtotal\n    taxAmount\n    deliveryFee\n    totalAmount\n    createdAt\n    items {\n      id\n      productName\n      productSku\n      quantity\n      unitPrice\n      totalPrice\n    }\n    shippingAddress {\n      fullName\n      phoneNumber\n      addressLine1\n      city\n      emirate\n      postalCode\n    }\n    statusHistory {\n      status\n      notes\n      createdAt\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "View All Orders (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  orders(limit: 10) {\n    id\n    orderNumber\n    status\n    customerName\n    customerEmail\n    totalAmount\n    createdAt\n    items {\n      productName\n      quantity\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Inventory Reserved",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  product(id: {{product_id}}) {\n    id\n    name\n    inventory {\n      quantityInStock\n      reservedQuantity\n      availableQuantity\n      isInStock\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Payment (Ziina)",
+			"item": [
+				{
+					"name": "Create Payment Session (Ziina)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Build payment input from saved order data",
+									"const orderNumber = pm.collectionVariables.get('order_number') || '{{order_number}}';",
+									"const orderTotal = pm.collectionVariables.get('order_total') || '119.98';",
+									"const customerName = 'Ahmed Al Maktoum';",
+									"const customerEmail = 'ahmed@test.ae';",
+									"const customerPhone = '+971501234567';",
+									"",
+									"// Build the input object (GraphQL uses camelCase)",
+									"const paymentInput = {",
+									"    input: {",
+									"        orderId: orderNumber,",
+									"        amount: orderTotal,",
+									"        currency: 'AED',",
+									"        customerEmail: customerEmail,",
+									"        customerPhone: customerPhone,",
+									"        customerName: customerName,",
+									"        taxAmount: '5.00',",
+									"        shippingAmount: '15.00',",
+									"        discountAmount: '0.00',",
+									"        items: [{",
+									"            name: 'Test Product',",
+									"            price: '49.99',",
+									"            quantity: 2,",
+									"            sku: 'TEST-001'",
+									"        }],",
+									"        shippingAddress: {",
+									"            fullName: customerName,",
+									"            phoneNumber: customerPhone,",
+									"            email: customerEmail,",
+									"            addressLine1: 'Villa 123, Palm Jumeirah',",
+									"            city: 'Dubai',",
+									"            emirate: 'DUBAI',",
+									"            postalCode: '12345'",
+									"        }",
+									"    },",
+									"    gatewayName: 'ZIINA'",
+									"};",
+									"",
+									"// Set the variables for GraphQL request",
+									"pm.request.body.graphql.variables = JSON.stringify(paymentInput);",
+									"",
+									"console.log('📦 Payment input prepared:');",
+									"console.log('Order Number:', orderNumber);",
+									"console.log('Amount:', orderTotal);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.createPaymentSession && response.data.createPaymentSession.success) {",
+									"        const payment = response.data.createPaymentSession;",
+									"        pm.collectionVariables.set('payment_id', payment.paymentId);",
+									"        pm.collectionVariables.set('payment_url', payment.paymentUrl);",
+									"        console.log('✅ Payment session created');",
+									"        console.log('Payment ID:', payment.paymentId);",
+									"        console.log('Payment URL:', payment.paymentUrl);",
+									"        console.log('');",
+									"        console.log('🔗 Open this URL to pay:', payment.paymentUrl);",
+									"        console.log('💳 Test Card: 4242 4242 4242 4242');",
+									"        console.log('📅 Expiry: 12/25');",
+									"        console.log('🔢 CVV: 123');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation CreatePaymentSession($input: PaymentSessionInput!, $gatewayName: String!) {\n  createPaymentSession(input: $input, gatewayName: $gatewayName) {\n    success\n    message\n    paymentUrl\n    paymentId\n    expiresAt\n    gatewayResponse\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"orderId\": \"{{order_number}}\",\n    \"amount\": \"{{order_total}}\",\n    \"currency\": \"AED\",\n    \"customerEmail\": \"ahmed@test.ae\",\n    \"customerPhone\": \"+971501234567\",\n    \"customerName\": \"Ahmed Al Maktoum\",\n    \"taxAmount\": \"5.00\",\n    \"shippingAmount\": \"15.00\",\n    \"discountAmount\": \"0.00\",\n    \"items\": [\n      {\n        \"name\": \"Test Product\",\n        \"price\": \"49.99\",\n        \"quantity\": 2,\n        \"sku\": \"TEST-001\"\n      }\n    ],\n    \"shippingAddress\": {\n      \"fullName\": \"Ahmed Al Maktoum\",\n      \"phoneNumber\": \"+971501234567\",\n      \"email\": \"ahmed@test.ae\",\n      \"addressLine1\": \"Villa 123, Palm Jumeirah\",\n      \"city\": \"Dubai\",\n      \"emirate\": \"DUBAI\",\n      \"postalCode\": \"12345\"\n    }\n  },\n  \"gatewayName\": \"ZIINA\"\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Payment Status",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  payment(paymentId: \"{{payment_id}}\") {\n    id\n    paymentId\n    order {\n      orderNumber\n      status\n    }\n    gateway {\n      name\n    }\n    status\n    amount\n    currency\n    paymentMethod\n    verifiedAt\n    transactionId\n    createdAt\n    gatewayResponse\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Payments",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  payments(limit: 10) {\n    id\n    paymentId\n    order {\n      orderNumber\n    }\n    gateway {\n      name\n    }\n    status\n    amount\n    currency\n    createdAt\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Verify Payment & Order",
+			"item": [
+				{
+					"name": "Check Order Status After Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  order(orderNumber: \"{{order_number}}\") {\n    orderNumber\n    status\n    confirmedAt\n    statusHistory {\n      status\n      notes\n      createdAt\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Inventory Deducted",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query {\n  product(id: {{product_id}}) {\n    name\n    inventory {\n      quantityInStock\n      reservedQuantity\n      availableQuantity\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "7. Order Management (Admin)",
+			"item": [
+				{
+					"name": "Update Order Status - CONFIRMED",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  updateOrderStatus(input: {\n    orderId: {{order_id}}\n    status: \"CONFIRMED\"\n    notes: \"Payment verified - Ziina payment successful\"\n  }) {\n    success\n    message\n    order {\n      orderNumber\n      status\n      confirmedAt\n      statusHistory {\n        status\n        notes\n        createdAt\n      }\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status - PROCESSING",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  updateOrderStatus(input: {\n    orderId: {{order_id}}\n    status: \"PROCESSING\"\n    notes: \"Order being prepared in warehouse\"\n  }) {\n    success\n    message\n    order {\n      orderNumber\n      status\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status - SHIPPED",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  updateOrderStatus(input: {\n    orderId: {{order_id}}\n    status: \"SHIPPED\"\n    notes: \"Shipped via Aramex - Tracking: AE123456789\"\n  }) {\n    success\n    message\n    order {\n      orderNumber\n      status\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status - DELIVERED",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  updateOrderStatus(input: {\n    orderId: {{order_id}}\n    status: \"DELIVERED\"\n    notes: \"Delivered successfully - Signature received\"\n  }) {\n    success\n    message\n    order {\n      orderNumber\n      status\n      deliveredAt\n      statusHistory {\n        status\n        notes\n        createdAt\n      }\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  cancelOrder(\n    orderId: {{order_id}}\n    reason: \"Customer requested cancellation - Testing\"\n  ) {\n    success\n    message\n    order {\n      orderNumber\n      status\n      statusHistory {\n        status\n        notes\n      }\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Shipping Address",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation {\n  updateShippingAddress(\n    orderId: {{order_id}}\n    fullName: \"Ahmed Abdullah Al Maktoum\"\n    phoneNumber: \"+971509876543\"\n    addressLine1: \"Villa 456, Jumeirah Beach Residence\"\n    city: \"Dubai\"\n    emirate: \"DUBAI\"\n    postalCode: \"54321\"\n  ) {\n    success\n    message\n    order {\n      orderNumber\n      shippingAddress {\n        fullName\n        phoneNumber\n        addressLine1\n        city\n        emirate\n      }\n    }\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}",
+							"host": ["{{base_url}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
+

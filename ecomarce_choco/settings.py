@@ -176,6 +176,39 @@ CORS_ALLOWED_ORIGINS = [
 # Allow credentials (cookies, authorization headers)
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF Settings (for cross-site requests)
+# ==============================================================================
+
+# Allow CSRF cookie to be sent in cross-site requests
+# For development (HTTP): Use 'Lax' and Secure=False
+# For production (HTTPS): Use 'None' and Secure=True
+if DEBUG:
+    # Development: Allow cross-site on localhost
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = False
+else:
+    # Production: Full cross-site support with HTTPS
+    CSRF_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SECURE = True
+
+# Trusted origins for CSRF (frontend domains)
+# Add your production frontend URL here
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+]
+
+# Add production frontend URL if different from default
+if FRONTEND_URL not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append(FRONTEND_URL)
+
 # ==============================================================================
 # GraphQL / Graphene Settings
 # ==============================================================================
@@ -218,6 +251,6 @@ ZIINA_WEBHOOK_SECRET = config('ZIINA_WEBHOOK_SECRET', default='')
 ZIINA_BASE_URL = config('ZIINA_BASE_URL', default='https://api-v2.ziina.com')
 ZIINA_TEST_MODE = config('ZIINA_TEST_MODE', default=True, cast=bool)
 
-# Frontend/Backend URLs (for payment redirects)
-FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+# Backend URL (for payment redirects)
+# Note: FRONTEND_URL is defined above in CSRF settings
 BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')

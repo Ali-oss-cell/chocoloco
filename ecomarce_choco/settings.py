@@ -179,21 +179,24 @@ CORS_ALLOW_CREDENTIALS = True
 # CSRF Settings (for cross-site requests)
 # ==============================================================================
 
+# Check if using HTTPS (from environment or default to False for HTTP)
+USE_HTTPS = config('USE_HTTPS', default=False, cast=bool)
+
 # Allow CSRF cookie to be sent in cross-site requests
-# For development (HTTP): Use 'Lax' and Secure=False
-# For production (HTTPS): Use 'None' and Secure=True
-if DEBUG:
-    # Development: Allow cross-site on localhost
-    CSRF_COOKIE_SAMESITE = 'Lax'
-    CSRF_COOKIE_SECURE = False
-    SESSION_COOKIE_SAMESITE = 'Lax'
-    SESSION_COOKIE_SECURE = False
-else:
-    # Production: Full cross-site support with HTTPS
+# For HTTP: Use 'Lax' and Secure=False
+# For HTTPS: Use 'None' and Secure=True
+if USE_HTTPS:
+    # HTTPS: Full cross-site support
     CSRF_COOKIE_SAMESITE = 'None'
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SAMESITE = 'None'
     SESSION_COOKIE_SECURE = True
+else:
+    # HTTP: Allow cross-site on localhost/development
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SECURE = False
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = False
 
 # Trusted origins for CSRF (frontend domains)
 # Add your production frontend URL here

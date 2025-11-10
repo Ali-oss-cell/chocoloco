@@ -171,6 +171,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
+    "https://clownfish-app-2ehbt.ondigitalocean.app",
 ]
 
 # Allow credentials (cookies, authorization headers)
@@ -206,6 +207,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
+    "https://clownfish-app-2ehbt.ondigitalocean.app",
 ]
 
 # Add production frontend URL if different from default

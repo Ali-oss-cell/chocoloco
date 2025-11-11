@@ -751,11 +751,7 @@ class ProductImageUseCaseInput(graphene.InputObjectType):
     """Input for uploading product use case images"""
     product_id = graphene.Int(required=True)
     image = graphene.String(required=True, description="Base64 encoded image data")
-    usecase_type = graphene.String(required=True, description="Type of use case (BREAKFAST, DESSERT, GIFT, etc.)")
-    title = graphene.String(required=True, description="Short title for this use case")
-    description = graphene.String(description="Description of how product is used")
-    alt_text = graphene.String()
-    display_order = graphene.Int(required=True, description="Display order (1-4)")
+    display_order = graphene.Int(description="Display order (1-4), auto-assigned if not provided")
 
 
 # Admin Mutations
@@ -1355,6 +1351,102 @@ class DeleteProductImage(graphene.Mutation):
             return DeleteProductImage(success=False, message="Failed to delete image. Please try again.")
 
 
+class UploadProductUseCaseImage(graphene.Mutation):
+    """Upload product use case image with automatic resizing"""
+    class Arguments:
+        input = ProductImageUseCaseInput(required=True)
+    
+    product_image = graphene.Field(ProductImageUseCaseType)
+    success = graphene.Boolean()
+    message = graphene.String()
+    
+    def mutate(self, info, input):
+        _require_staff(info)
+        try:
+            # Get the product
+            product = Product.objects.get(id=input.product_id)
+            
+            # Decode base64 image
+            import base64
+            image_data = input.image
+            if image_data.startswith('data:image'):
+                # Remove data URL prefix
+                image_data = image_data.split(',')[1]
+            
+            # Decode base64
+            image_bytes = base64.b64decode(image_data)
+            
+            # Create PIL Image
+            pil_image = Image.open(io.BytesIO(image_bytes))
+            
+            # Convert to RGB if necessary
+            if pil_image.mode in ('RGBA', 'LA', 'P'):
+                pil_image = pil_image.convert('RGB')
+            
+            # Resize image (max 1200x1200, maintain aspect ratio)
+            max_size = (1200, 1200)
+            pil_image.thumbnail(max_size, Image.Resampling.LANCZOS)
+            
+            # Generate filename
+            import uuid
+            filename = f"{product.slug}_usecase_{uuid.uuid4().hex[:8]}.jpg"
+            
+            # Save main image
+            main_image_io = io.BytesIO()
+            pil_image.save(main_image_io, format='JPEG', quality=85, optimize=True)
+            main_image_io.seek(0)
+            
+            # Determine display_order (must be 1-4)
+            existing_usecase_count = product.usecase_images.count()
+            if input.get('display_order') is not None:
+                display_order = max(1, min(4, input.get('display_order')))  # Clamp between 1-4
+            else:
+                # Auto-assign next available order
+                display_order = min(existing_usecase_count + 1, 4)
+            
+            # Create ProductImageUseCase instance
+            product_usecase_image = ProductImageUseCase(
+                product=product,
+                display_order=display_order
+            )
+            
+            # Save the image
+            product_usecase_image.image.save(
+                filename,
+                ContentFile(main_image_io.getvalue()),
+                save=False
+            )
+            
+            product_usecase_image.save()
+            
+            return UploadProductUseCaseImage(
+                product_image=product_usecase_image,
+                success=True,
+                message=f"Use case image uploaded successfully for '{product.name}'"
+            )
+            
+        except Product.DoesNotExist:
+            return UploadProductUseCaseImage(success=False, message="Product not found")
+        except ValueError as e:
+            logger.error(f"Value error uploading use case image: {str(e)}")
+            return UploadProductUseCaseImage(success=False, message=f"Invalid image data provided: {str(e)}")
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"Error uploading use case image: {error_msg}", exc_info=True)
+            
+            # Check for constraint violation
+            if 'display_order' in error_msg.lower() or 'constraint' in error_msg.lower():
+                return UploadProductUseCaseImage(
+                    success=False, 
+                    message=f"Image upload failed: Invalid display_order. Please ensure display_order is between 1-4. Error: {error_msg}"
+                )
+            
+            return UploadProductUseCaseImage(
+                success=False, 
+                message=f"Failed to upload use case image: {error_msg}. Please check the image format and try again."
+            )
+
+
 class SetPrimaryImage(graphene.Mutation):
     """Set a product image as primary"""
     class Arguments:
@@ -1654,6 +1746,7 @@ class ProductAdminMutation(graphene.ObjectType):
     
     # Images
     upload_product_image = UploadProductImage.Field()
+    upload_product_use_case_image = UploadProductUseCaseImage.Field()
     delete_product_image = DeleteProductImage.Field()
     set_primary_image = SetPrimaryImage.Field()
     

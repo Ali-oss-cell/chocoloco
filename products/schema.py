@@ -1246,12 +1246,21 @@ class UploadProductImage(graphene.Mutation):
             thumbnail.save(thumbnail_io, format='JPEG', quality=80, optimize=True)
             thumbnail_io.seek(0)
             
+            # Determine display_order (must be 1-3)
+            # If not provided, use next available order (1, 2, or 3)
+            existing_images_count = product.images.count()
+            if input.get('display_order') is not None:
+                display_order = max(1, min(3, input.get('display_order')))  # Clamp between 1-3
+            else:
+                # Auto-assign next available order
+                display_order = min(existing_images_count + 1, 3)
+            
             # Create ProductImage instance
             product_image = ProductImage(
                 product=product,
                 alt_text=input.get('alt_text', f"{product.name} image"),
                 is_primary=input.get('is_primary', False),
-                display_order=input.get('display_order', 0)
+                display_order=display_order
             )
             
             # Save the main image

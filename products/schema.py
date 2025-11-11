@@ -51,16 +51,32 @@ class BrandType(DjangoObjectType):
 
 class ProductImageType(DjangoObjectType):
     """Product Image object type"""
+    image = graphene.String()  # Explicitly define as String to ensure URL is returned
+    
     class Meta:
         model = ProductImage
         fields = '__all__'
+    
+    def resolve_image(self, info):
+        """Return the image URL path"""
+        if self.image:
+            return self.image.url  # Returns /media/products/filename.jpg
+        return None
 
 
 class ProductImageUseCaseType(DjangoObjectType):
     """Product Use Case Image object type"""
+    image = graphene.String()  # Explicitly define as String to ensure URL is returned
+    
     class Meta:
         model = ProductImageUseCase
         fields = '__all__'
+    
+    def resolve_image(self, info):
+        """Return the image URL path"""
+        if self.image:
+            return self.image.url  # Returns /media/products/usecase/filename.jpg
+        return None
 
 
 class ProductPriceType(DjangoObjectType):
@@ -1288,10 +1304,22 @@ class UploadProductImage(graphene.Mutation):
             return UploadProductImage(success=False, message="Product not found")
         except ValueError as e:
             logger.error(f"Value error uploading image: {str(e)}")
-            return UploadProductImage(success=False, message="Invalid image data provided")
+            return UploadProductImage(success=False, message=f"Invalid image data provided: {str(e)}")
         except Exception as e:
-            logger.error(f"Error uploading product image: {str(e)}", exc_info=True)
-            return UploadProductImage(success=False, message="Failed to upload image. Please check the image format and try again.")
+            error_msg = str(e)
+            logger.error(f"Error uploading product image: {error_msg}", exc_info=True)
+            
+            # Check for constraint violation
+            if 'display_order' in error_msg.lower() or 'constraint' in error_msg.lower():
+                return UploadProductImage(
+                    success=False, 
+                    message=f"Image upload failed: Invalid display_order. Please ensure display_order is between 1-3. Error: {error_msg}"
+                )
+            
+            return UploadProductImage(
+                success=False, 
+                message=f"Failed to upload image: {error_msg}. Please check the image format and try again."
+            )
 
 
 class DeleteProductImage(graphene.Mutation):
